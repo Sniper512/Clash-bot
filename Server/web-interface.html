@@ -174,6 +174,90 @@
 				content: "✅ ";
 				margin-right: 10px;
 			}
+
+			.image-upload-section {
+				margin: 15px 0;
+				padding: 15px;
+				border: 2px dashed #667eea;
+				border-radius: 8px;
+				text-align: center;
+				background: #f8f9ff;
+			}
+
+			.image-upload-section.dragover {
+				border-color: #764ba2;
+				background: #f0f0ff;
+			}
+
+			.file-input {
+				display: none;
+			}
+
+			.upload-button {
+				background: #667eea;
+				color: white;
+				border: none;
+				padding: 10px 20px;
+				border-radius: 5px;
+				cursor: pointer;
+				margin: 10px;
+			}
+
+			.upload-button:hover {
+				background: #5a6cdc;
+			}
+
+			.image-preview {
+				max-width: 100%;
+				max-height: 200px;
+				margin: 10px 0;
+				border-radius: 5px;
+				display: none;
+			}
+
+			.form-group {
+				margin: 10px 0;
+			}
+
+			.form-group label {
+				display: block;
+				margin-bottom: 5px;
+				font-weight: bold;
+				color: #667eea;
+			}
+
+			.form-group input,
+			.form-group textarea {
+				width: 100%;
+				padding: 8px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				font-size: 14px;
+			}
+
+			.form-group textarea {
+				height: 60px;
+				resize: vertical;
+			}
+
+			.toggle-section {
+				margin: 10px 0;
+			}
+
+			.toggle-button {
+				background: #f8f9fa;
+				border: 1px solid #667eea;
+				color: #667eea;
+				padding: 8px 16px;
+				border-radius: 4px;
+				cursor: pointer;
+				margin-right: 10px;
+			}
+
+			.toggle-button.active {
+				background: #667eea;
+				color: white;
+			}
 		</style>
 	</head>
 	<body>
@@ -197,8 +281,105 @@
 						AI analyzes enemy base layout and suggests optimal attack strategy
 						with weakness detection.
 					</p>
-					<button class="test-button" onclick="testEndpoint('analyze-base')">
-						Test Base Analysis
+
+					<div class="toggle-section">
+						<button
+							class="toggle-button active"
+							onclick="toggleAnalysisMode('image', this)"
+						>
+							📸 Image Analysis
+						</button>
+						<button
+							class="toggle-button"
+							onclick="toggleAnalysisMode('text', this)"
+						>
+							📝 Text Description
+						</button>
+					</div>
+
+					<div id="image-analysis-section">
+						<div
+							class="image-upload-section"
+							ondrop="handleDrop(event, 'baseImage')"
+							ondragover="handleDragOver(event)"
+							ondragleave="handleDragLeave(event)"
+						>
+							<p>📷 Drop base image here or click to upload</p>
+							<input
+								type="file"
+								id="baseImageInput"
+								class="file-input"
+								accept="image/*"
+								onchange="handleFileSelect(event, 'baseImage')"
+							/>
+							<button
+								class="upload-button"
+								onclick="document.getElementById('baseImageInput').click()"
+							>
+								Choose Image
+							</button>
+							<img
+								id="baseImagePreview"
+								class="image-preview"
+								alt="Base preview"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="troopComp">Available Troops:</label>
+							<input
+								type="text"
+								id="troopComp"
+								placeholder="Giants: 10, Wizards: 20, Archers: 50..."
+								value="Giants: 10, Wizards: 20, Archers: 50, Wall Breakers: 8"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="targetRes">Target Resources:</label>
+							<input
+								type="text"
+								id="targetRes"
+								placeholder="Gold, Elixir, Dark Elixir priority"
+								value="Gold and Elixir priority"
+							/>
+						</div>
+					</div>
+
+					<div id="text-analysis-section" style="display: none">
+						<div class="form-group">
+							<label for="baseLayout">Base Layout Description:</label>
+							<textarea
+								id="baseLayout"
+								placeholder="Describe the base layout (e.g., TH10 base with centralized town hall...)"
+							>
+TH10 base with centralized town hall, compartmentalized storages</textarea
+							>
+						</div>
+
+						<div class="form-group">
+							<label for="defensePos">Defense Positions:</label>
+							<input
+								type="text"
+								id="defensePos"
+								placeholder="Archer Tower at north, Cannon at south..."
+								value="Archer Tower at (100,150), Cannon at (200,300)"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="wallConfig">Wall Configuration:</label>
+							<input
+								type="text"
+								id="wallConfig"
+								placeholder="Layered walls, compartments..."
+								value="Layered walls with 2 compartments"
+							/>
+						</div>
+					</div>
+
+					<button class="test-button" onclick="testBaseAnalysis()">
+						Analyze Base with AI
 					</button>
 					<div class="response-area" id="response-analyze-base"></div>
 				</div>
@@ -263,11 +444,69 @@
 						AI analyzes base images and creates detailed step-by-step attack
 						plans with visual recognition.
 					</p>
-					<button
-						class="test-button"
-						onclick="testEndpoint('plan-attack-visual')"
+
+					<div
+						class="image-upload-section"
+						ondrop="handleDrop(event, 'planImage')"
+						ondragover="handleDragOver(event)"
+						ondragleave="handleDragLeave(event)"
 					>
-						Test Visual Planning
+						<p>📷 Drop base image here for visual attack planning</p>
+						<input
+							type="file"
+							id="planImageInput"
+							class="file-input"
+							accept="image/*"
+							onchange="handleFileSelect(event, 'planImage')"
+						/>
+						<button
+							class="upload-button"
+							onclick="document.getElementById('planImageInput').click()"
+						>
+							Choose Base Image
+						</button>
+						<img
+							id="planImagePreview"
+							class="image-preview"
+							alt="Plan preview"
+						/>
+					</div>
+
+					<div class="form-group">
+						<label for="availableArmy">Available Army:</label>
+						<input
+							type="text"
+							id="availableArmy"
+							placeholder="20 Giants, 100 Archers, 50 Wizards..."
+							value="20 Giants, 100 Archers, 50 Wizards, 10 Wall Breakers"
+						/>
+					</div>
+
+					<div class="form-group">
+						<label for="attackGoal">Attack Goal:</label>
+						<select
+							id="attackGoal"
+							style="
+								width: 100%;
+								padding: 8px;
+								border: 1px solid #ddd;
+								border-radius: 4px;
+							"
+						>
+							<option value="resources">Resources</option>
+							<option value="trophies">Trophies</option>
+							<option value="stars">Stars</option>
+							<option value="destruction">Destruction</option>
+						</select>
+					</div>
+
+					<div class="form-group">
+						<label for="playerLevel">Player Level:</label>
+						<input type="number" id="playerLevel" value="11" min="1" max="14" />
+					</div>
+
+					<button class="test-button" onclick="testVisualPlanning()">
+						Create Visual Attack Plan
 					</button>
 					<div class="response-area" id="response-plan-attack-visual"></div>
 				</div>
@@ -294,11 +533,335 @@
 
 		<script>
 			const API_BASE = "http://localhost:3000";
+			let uploadedImages = {
+				baseImage: null,
+				planImage: null,
+			};
 
 			// Check server status on load
 			window.onload = function () {
 				checkServerStatus();
 			};
+
+			// Image upload handling
+			function handleDrop(event, imageType) {
+				event.preventDefault();
+				event.stopPropagation();
+
+				const section = event.target.closest(".image-upload-section");
+				section.classList.remove("dragover");
+
+				const files = event.dataTransfer.files;
+				if (files.length > 0) {
+					processFile(files[0], imageType);
+				}
+			}
+
+			function handleDragOver(event) {
+				event.preventDefault();
+				event.stopPropagation();
+				const section = event.target.closest(".image-upload-section");
+				section.classList.add("dragover");
+			}
+
+			function handleDragLeave(event) {
+				event.preventDefault();
+				event.stopPropagation();
+				const section = event.target.closest(".image-upload-section");
+				section.classList.remove("dragover");
+			}
+
+			function handleFileSelect(event, imageType) {
+				const file = event.target.files[0];
+				if (file) {
+					processFile(file, imageType);
+				}
+			}
+
+			function processFile(file, imageType) {
+				if (!file.type.startsWith("image/")) {
+					alert("Please select an image file");
+					return;
+				}
+
+				const reader = new FileReader();
+				reader.onload = function (e) {
+					const base64String = e.target.result;
+					uploadedImages[imageType] = base64String;
+
+					// Show preview
+					const preview = document.getElementById(`${imageType}Preview`);
+					preview.src = base64String;
+					preview.style.display = "block";
+
+					// Update upload section text
+					const section = document
+						.querySelector(`#${imageType}Input`)
+						.closest(".image-upload-section");
+					const p = section.querySelector("p");
+					p.textContent = `✅ Image uploaded: ${file.name}`;
+					p.style.color = "#28a745";
+				};
+				reader.readAsDataURL(file);
+			}
+
+			function toggleAnalysisMode(mode, button) {
+				// Update button states
+				document.querySelectorAll(".toggle-button").forEach((btn) => {
+					btn.classList.remove("active");
+				});
+				button.classList.add("active");
+
+				// Show/hide sections
+				if (mode === "image") {
+					document.getElementById("image-analysis-section").style.display =
+						"block";
+					document.getElementById("text-analysis-section").style.display =
+						"none";
+				} else {
+					document.getElementById("image-analysis-section").style.display =
+						"none";
+					document.getElementById("text-analysis-section").style.display =
+						"block";
+				}
+			}
+
+			async function testBaseAnalysis() {
+				const button = event.target;
+				const responseEl = document.getElementById("response-analyze-base");
+				const isImageMode =
+					document.getElementById("image-analysis-section").style.display !==
+					"none";
+
+				button.disabled = true;
+				button.textContent = "Analyzing...";
+				responseEl.innerHTML = "";
+				responseEl.classList.remove("show");
+
+				try {
+					let requestData = {};
+
+					if (isImageMode) {
+						// Image analysis mode
+						if (!uploadedImages.baseImage) {
+							throw new Error("Please upload a base image first");
+						}
+
+						requestData = {
+							baseImage: uploadedImages.baseImage,
+							troopComposition: document.getElementById("troopComp").value,
+							targetResources: document.getElementById("targetRes").value,
+						};
+					} else {
+						// Text analysis mode
+						const defensePositions = document
+							.getElementById("defensePos")
+							.value.split(",")
+							.map((pos) => pos.trim())
+							.filter((pos) => pos);
+
+						requestData = {
+							baseLayout: document.getElementById("baseLayout").value,
+							defensePositions: defensePositions,
+							wallConfiguration: document.getElementById("wallConfig").value,
+							troopComposition: document.getElementById("troopComp").value,
+							targetResources: document.getElementById("targetRes").value,
+						};
+					}
+
+					const response = await fetch(`${API_BASE}/api/analyze-base`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(requestData),
+					});
+
+					const data = await response.json();
+
+					if (data.success) {
+						responseEl.innerHTML = `
+							<h4>🎯 AI Base Analysis Results</h4>
+							
+							${
+								data.visionModelUsed &&
+								data.visionModelUsed !== "N/A (Text-based analysis)"
+									? `
+							<div style="margin: 15px 0; padding: 10px; background: #e8f5e8; border-left: 4px solid #28a745; border-radius: 5px;">
+								<small>📡 Vision Model Used: <strong>${data.visionModelUsed}</strong> | Analysis Type: <strong>${data.analysisType}</strong></small>
+							</div>
+							`
+									: `
+							<div style="margin: 15px 0; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;">
+								<small>📝 Analysis Type: <strong>${data.analysisType}</strong></small>
+							</div>
+							`
+							}
+							
+							${
+								data.analysis.baseAnalysis !== "No image analysis performed"
+									? `
+							<div style="margin: 15px 0; padding: 15px; background: #f0f8ff; border-left: 4px solid #667eea; border-radius: 5px;">
+								<h5>📸 Vision Model Base Analysis:</h5>
+								<div style="max-height: 200px; overflow-y: auto; font-size: 0.9em; white-space: pre-wrap;">${data.analysis.baseAnalysis}</div>
+							</div>
+							`
+									: ""
+							}
+							
+							<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>🏰 Base Type:</strong><br>${data.analysis.baseType}
+								</div>
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>🏛️ Town Hall:</strong><br>Level ${data.analysis.townHallLevel}
+								</div>
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>⚠️ Risk Level:</strong><br>${data.analysis.riskLevel}
+								</div>
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>📈 Success Rate:</strong><br>${data.analysis.successProbability}%
+								</div>
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>⭐ Expected Stars:</strong><br>${data.analysis.expectedStars} stars
+								</div>
+							</div>
+							
+							<div style="margin: 15px 0; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;">
+								<h5>🎯 Recommended Strategy:</h5>
+								<p>${data.analysis.recommendedStrategy}</p>
+							</div>
+							
+							<div style="margin: 15px 0; padding: 15px; background: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 5px;">
+								<h5>📋 Step-by-Step Attack Plan:</h5>
+								<ol style="margin: 10px 0; padding-left: 20px;">
+									${data.analysis.stepByStepPlan
+										.map((step) => `<li style="margin: 5px 0;">${step}</li>`)
+										.join("")}
+								</ol>
+							</div>
+							
+							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>🎯 Priority Targets:</strong><br>
+									${data.analysis.priorityTargets.join("<br>")}
+								</div>
+								<div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+									<strong>🚪 Entry Points:</strong><br>
+									${data.analysis.entryPoints.join("<br>")}
+								</div>
+							</div>
+							
+							<details style="margin: 15px 0;">
+								<summary style="cursor: pointer; font-weight: bold; color: #667eea;">📄 Full AI Strategy Analysis</summary>
+								<div style="margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+									<pre style="white-space: pre-wrap; font-size: 0.9em;">${
+										data.analysis.fullAnalysis
+									}</pre>
+								</div>
+							</details>
+						`;
+					} else {
+						throw new Error(data.error || "Analysis failed");
+					}
+
+					responseEl.classList.add("show");
+					button.textContent = "Analysis Complete! ✅";
+				} catch (error) {
+					responseEl.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
+					responseEl.classList.add("show");
+					button.textContent = "Analysis Failed ❌";
+				}
+
+				setTimeout(() => {
+					button.textContent = "Analyze Base with AI";
+					button.disabled = false;
+				}, 3000);
+			}
+
+			async function testVisualPlanning() {
+				const button = event.target;
+				const responseEl = document.getElementById(
+					"response-plan-attack-visual"
+				);
+
+				button.disabled = true;
+				button.textContent = "Creating Plan...";
+				responseEl.innerHTML = "";
+				responseEl.classList.remove("show");
+
+				try {
+					if (!uploadedImages.planImage) {
+						throw new Error("Please upload a base image first");
+					}
+
+					const requestData = {
+						baseImage: uploadedImages.planImage,
+						availableArmy: document.getElementById("availableArmy").value,
+						attackGoal: document.getElementById("attackGoal").value,
+						playerLevel: parseInt(document.getElementById("playerLevel").value),
+					};
+
+					const response = await fetch(`${API_BASE}/api/plan-attack-visual`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(requestData),
+					});
+
+					const data = await response.json();
+
+					if (data.success) {
+						responseEl.innerHTML = `
+							<h4>🗺️ Visual Attack Plan</h4>
+							<div style="margin: 10px 0;">
+								<strong>Base Layout:</strong> ${data.attackPlan.baseLayout}
+							</div>
+							<div style="margin: 10px 0;">
+								<strong>Key Weaknesses:</strong><br>
+								${data.attackPlan.weaknesses.join("<br>")}
+							</div>
+							<div style="margin: 10px 0;">
+								<strong>Attack Vectors:</strong><br>
+								${data.attackPlan.attackVectors.join("<br>")}
+							</div>
+							<div style="margin: 10px 0;">
+								<strong>Detailed Steps:</strong><br>
+								${data.attackPlan.detailedSteps
+									.map((step, i) => `${i + 1}. ${step}`)
+									.join("<br>")}
+							</div>
+							<div style="margin: 10px 0;">
+								<strong>Hero Strategy:</strong><br>
+								${data.attackPlan.heroStrategy}
+							</div>
+							<div style="margin: 10px 0;">
+								<strong>Success Metrics:</strong><br>
+								${data.attackPlan.successMetrics}
+							</div>
+							<details>
+								<summary>Full Attack Plan</summary>
+								<pre>${data.attackPlan.fullPlan}</pre>
+							</details>
+						`;
+					} else {
+						throw new Error(data.error || "Planning failed");
+					}
+
+					responseEl.classList.add("show");
+					button.textContent = "Plan Created! ✅";
+				} catch (error) {
+					responseEl.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
+					responseEl.classList.add("show");
+					button.textContent = "Planning Failed ❌";
+				}
+
+				setTimeout(() => {
+					button.textContent = "Create Visual Attack Plan";
+					button.disabled = false;
+				}, 3000);
+			}
 
 			async function checkServerStatus() {
 				try {
