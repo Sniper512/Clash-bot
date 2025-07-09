@@ -17,34 +17,65 @@ const ai = genkit({
 // Initialize Express app
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
 
 const PORT = process.env.PORT || 3000;
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-	res.json({ status: 'ok', message: 'AI Attack Analyzer is running' });
+app.get("/health", (req, res) => {
+	res.json({ status: "ok", message: "AI Attack Analyzer is running" });
 });
 
 // 1. Base Analysis - Analyze enemy base layout and suggest optimal attack strategy
-app.post('/api/analyze-base', async (req, res) => {
+app.post("/api/analyze-base", async (req, res) => {
 	try {
-		const { baseImage, troopComposition, targetResources } = req.body;
-		
-		if (!baseImage) {
+		const {
+			baseImage,
+			troopComposition,
+			targetResources,
+			baseLayout,
+			defensePositions,
+			wallConfiguration,
+		} = req.body;
+
+		// If no image provided, use text-based analysis
+		if (!baseImage && !baseLayout) {
 			return res.status(400).json({
 				success: false,
-				error: 'Base image is required for analysis'
+				error: "Base image or base layout description is required for analysis",
 			});
 		}
-		
+
 		const prompt = `
-		You are an expert Clash of Clans attack strategist. Analyze this base layout image and provide strategic recommendations.
+		You are an expert Clash of Clans attack strategist. ${
+			baseImage
+				? "Analyze this base layout image"
+				: "Analyze this base layout description"
+		} and provide strategic recommendations.
 		
-		Available troops: ${troopComposition || 'Standard army composition'}
-		Target resources: ${targetResources || 'Gold, Elixir, Dark Elixir'}
+		Available troops: ${troopComposition || "Standard army composition"}
+		Target resources: ${targetResources || "Gold, Elixir, Dark Elixir"}
 		
-		Please analyze the base image and provide a detailed attack plan:
+		${
+			!baseImage
+				? `
+		Base Layout Description:
+		- Layout: ${baseLayout || "Unknown layout"}
+		- Defense Positions: ${
+			defensePositions
+				? defensePositions.join(", ")
+				: "Standard defense placement"
+		}
+		- Wall Configuration: ${wallConfiguration || "Standard wall setup"}
+		`
+				: ""
+		}
+		
+		${
+			baseImage
+				? "Please analyze the base image and provide a detailed attack plan:"
+				: "Based on the base description provided, provide a detailed attack plan:"
+		}
 		
 		1. **Base Analysis:**
 		   - Base type classification (farming base, war base, trophy base)
@@ -89,31 +120,42 @@ app.post('/api/analyze-base', async (req, res) => {
 
 		// Prepare the image data for Gemini Vision
 		let imageData = null;
-		if (baseImage.startsWith('data:image/')) {
+		if (baseImage.startsWith("data:image/")) {
 			// Handle base64 encoded images
-			const base64Data = baseImage.split(',')[1];
+			const base64Data = baseImage.split(",")[1];
 			imageData = {
 				inlineData: {
 					data: base64Data,
-					mimeType: baseImage.split(';')[0].split(':')[1]
-				}
+					mimeType: baseImage.split(";")[0].split(":")[1],
+				},
 			};
 		} else {
 			// Handle image URLs or file paths
 			imageData = {
 				fileData: {
 					fileUri: baseImage,
-					mimeType: "image/png"
-				}
+					mimeType: "image/png",
+				},
 			};
 		}
 
-		// Generate analysis with image input
-		const { text } = await ai.generate({
-			prompt: prompt,
-			media: imageData
-		});
-		
+		let generationResult;
+
+		if (baseImage) {
+			// Generate analysis with image input
+			generationResult = await ai.generate({
+				prompt: prompt,
+				media: imageData,
+			});
+		} else {
+			// Generate analysis with text input only
+			generationResult = await ai.generate({
+				prompt: prompt,
+			});
+		}
+
+		const { text } = generationResult;
+
 		// Parse AI response and structure it with enhanced vision analysis
 		const analysis = {
 			baseType: extractBaseType(text),
@@ -132,28 +174,28 @@ app.post('/api/analyze-base', async (req, res) => {
 			successProbability: extractSuccessProbability(text),
 			expectedStars: extractExpectedStars(text),
 			stepByStepPlan: extractStepByStepPlan(text),
-			fullAnalysis: text
+			fullAnalysis: text,
 		};
 
 		res.json({
 			success: true,
-			analysis: analysis
+			analysis: analysis,
 		});
 	} catch (error) {
-		console.error('Base analysis error:', error);
+		console.error("Base analysis error:", error);
 		res.status(500).json({
 			success: false,
-			error: 'Failed to analyze base',
-			details: error.message
+			error: "Failed to analyze base",
+			details: error.message,
 		});
 	}
 });
 
 // 2. Troop Deployment Optimizer - Suggest optimal troop placement
-app.post('/api/optimize-deployment', async (req, res) => {
+app.post("/api/optimize-deployment", async (req, res) => {
 	try {
 		const { troopType, quantity, currentSituation, enemyDefenses } = req.body;
-		
+
 		const prompt = `
 		As a Clash of Clans tactical expert, optimize the deployment of ${quantity} ${troopType} troops.
 		
@@ -171,33 +213,34 @@ app.post('/api/optimize-deployment', async (req, res) => {
 		`;
 
 		const { text } = await ai.generate(prompt);
-		
+
 		const deployment = {
 			timing: extractTiming(text),
 			formation: extractFormation(text),
 			supportTroops: extractSupportTroops(text),
 			effectiveness: extractEffectiveness(text),
-			recommendations: text
+			recommendations: text,
 		};
 
 		res.json({
 			success: true,
-			deployment: deployment
+			deployment: deployment,
 		});
 	} catch (error) {
-		console.error('Deployment optimization error:', error);
+		console.error("Deployment optimization error:", error);
 		res.status(500).json({
 			success: false,
-			error: 'Failed to optimize deployment'
+			error: "Failed to optimize deployment",
 		});
 	}
 });
 
 // 3. Real-time Battle Adaptation - Adapt strategy based on current battle state
-app.post('/api/adapt-strategy', async (req, res) => {
+app.post("/api/adapt-strategy", async (req, res) => {
 	try {
-		const { battleProgress, remainingTroops, enemyStatus, objectives } = req.body;
-		
+		const { battleProgress, remainingTroops, enemyStatus, objectives } =
+			req.body;
+
 		const prompt = `
 		Analyze this ongoing Clash of Clans battle and suggest tactical adaptations.
 		
@@ -218,7 +261,7 @@ app.post('/api/adapt-strategy', async (req, res) => {
 		`;
 
 		const { text } = await ai.generate(prompt);
-		
+
 		const adaptation = {
 			shouldPivot: extractPivotDecision(text),
 			nextTroops: extractNextTroops(text),
@@ -226,27 +269,28 @@ app.post('/api/adapt-strategy', async (req, res) => {
 			spellRecommendations: extractSpellRecommendations(text),
 			heroTiming: extractHeroTiming(text),
 			successProbability: extractSuccessProbability(text),
-			immediateActions: text
+			immediateActions: text,
 		};
 
 		res.json({
 			success: true,
-			adaptation: adaptation
+			adaptation: adaptation,
 		});
 	} catch (error) {
-		console.error('Strategy adaptation error:', error);
+		console.error("Strategy adaptation error:", error);
 		res.status(500).json({
 			success: false,
-			error: 'Failed to adapt strategy'
+			error: "Failed to adapt strategy",
 		});
 	}
 });
 
 // 4. Army Composition Optimizer - Suggest optimal army based on target base
-app.post('/api/optimize-army', async (req, res) => {
+app.post("/api/optimize-army", async (req, res) => {
 	try {
-		const { targetBaseType, availableTroops, attackGoal, townHallLevel } = req.body;
-		
+		const { targetBaseType, availableTroops, attackGoal, townHallLevel } =
+			req.body;
+
 		const prompt = `
 		Design an optimal army composition for Clash of Clans attack.
 		
@@ -268,7 +312,7 @@ app.post('/api/optimize-army', async (req, res) => {
 		`;
 
 		const { text } = await ai.generate(prompt);
-		
+
 		const armyOptimization = {
 			troopComposition: extractTroopComposition(text),
 			spellSelection: extractSpellSelection(text),
@@ -276,27 +320,28 @@ app.post('/api/optimize-army', async (req, res) => {
 			clanCastleRequest: extractCCRequest(text),
 			expectedStars: extractExpectedStars(text),
 			resourceGain: extractResourceGain(text),
-			fullRecommendation: text
+			fullRecommendation: text,
 		};
 
 		res.json({
 			success: true,
-			armyOptimization: armyOptimization
+			armyOptimization: armyOptimization,
 		});
 	} catch (error) {
-		console.error('Army optimization error:', error);
+		console.error("Army optimization error:", error);
 		res.status(500).json({
 			success: false,
-			error: 'Failed to optimize army'
+			error: "Failed to optimize army",
 		});
 	}
 });
 
 // 5. Learning from Battle Results - Analyze battle outcome and improve future strategies
-app.post('/api/learn-from-battle', async (req, res) => {
+app.post("/api/learn-from-battle", async (req, res) => {
 	try {
-		const { battleResult, strategyUsed, troopsUsed, outcome, resources } = req.body;
-		
+		const { battleResult, strategyUsed, troopsUsed, outcome, resources } =
+			req.body;
+
 		const prompt = `
 		Analyze this Clash of Clans battle result and extract learning insights.
 		
@@ -319,7 +364,7 @@ app.post('/api/learn-from-battle', async (req, res) => {
 		`;
 
 		const { text } = await ai.generate(prompt);
-		
+
 		const learning = {
 			successFactors: extractSuccessFactors(text),
 			improvementAreas: extractImprovementAreas(text),
@@ -327,38 +372,43 @@ app.post('/api/learn-from-battle', async (req, res) => {
 			deploymentLessons: extractDeploymentLessons(text),
 			performanceScore: extractPerformanceScore(text),
 			futureRecommendations: extractFutureRecommendations(text),
-			fullAnalysis: text
+			fullAnalysis: text,
 		};
 
 		res.json({
 			success: true,
-			learning: learning
+			learning: learning,
 		});
 	} catch (error) {
-		console.error('Learning analysis error:', error);
+		console.error("Learning analysis error:", error);
 		res.status(500).json({
 			success: false,
-			error: 'Failed to analyze battle for learning'
+			error: "Failed to analyze battle for learning",
 		});
 	}
 });
 
 // 6. Visual Attack Planner - Analyze base image and create detailed attack plan
-app.post('/api/plan-attack-visual', async (req, res) => {
+app.post("/api/plan-attack-visual", async (req, res) => {
 	try {
-		const { baseImage, availableArmy, attackGoal = 'resources', playerLevel = 11 } = req.body;
-		
+		const {
+			baseImage,
+			availableArmy,
+			attackGoal = "resources",
+			playerLevel = 11,
+		} = req.body;
+
 		if (!baseImage) {
 			return res.status(400).json({
 				success: false,
-				error: 'Base image is required for visual attack planning'
+				error: "Base image is required for visual attack planning",
 			});
 		}
-		
+
 		const prompt = `
 		As an expert Clash of Clans attack strategist, analyze this base image and create a comprehensive attack plan.
 		
-		**Available Army:** ${availableArmy || 'Please specify army composition'}
+		**Available Army:** ${availableArmy || "Please specify army composition"}
 		**Attack Goal:** ${attackGoal}
 		**Player Level:** ${playerLevel}
 		
@@ -404,29 +454,29 @@ app.post('/api/plan-attack-visual', async (req, res) => {
 
 		// Prepare the image data for Gemini Vision
 		let imageData = null;
-		if (baseImage.startsWith('data:image/')) {
-			const base64Data = baseImage.split(',')[1];
+		if (baseImage.startsWith("data:image/")) {
+			const base64Data = baseImage.split(",")[1];
 			imageData = {
 				inlineData: {
 					data: base64Data,
-					mimeType: baseImage.split(';')[0].split(':')[1]
-				}
+					mimeType: baseImage.split(";")[0].split(":")[1],
+				},
 			};
 		} else {
 			imageData = {
 				fileData: {
 					fileUri: baseImage,
-					mimeType: "image/png"
-				}
+					mimeType: "image/png",
+				},
 			};
 		}
 
 		// Generate visual attack plan
 		const { text } = await ai.generate({
 			prompt: prompt,
-			media: imageData
+			media: imageData,
 		});
-		
+
 		// Parse the detailed attack plan
 		const attackPlan = {
 			baseLayout: extractBaseLayout(text),
@@ -439,19 +489,19 @@ app.post('/api/plan-attack-visual', async (req, res) => {
 			spellPlan: extractSpellPlan(text),
 			successMetrics: extractSuccessMetrics(text),
 			contingencyPlan: extractContingencyPlan(text),
-			fullPlan: text
+			fullPlan: text,
 		};
 
 		res.json({
 			success: true,
-			attackPlan: attackPlan
+			attackPlan: attackPlan,
 		});
 	} catch (error) {
-		console.error('Visual attack planning error:', error);
+		console.error("Visual attack planning error:", error);
 		res.status(500).json({
 			success: false,
-			error: 'Failed to create visual attack plan',
-			details: error.message
+			error: "Failed to create visual attack plan",
+			details: error.message,
 		});
 	}
 });
@@ -459,11 +509,13 @@ app.post('/api/plan-attack-visual', async (req, res) => {
 // Helper functions to extract specific data from AI responses
 function extractBaseType(text) {
 	const match = text.match(/base type[:\s]*([^.\n]+)/i);
-	return match ? match[1].trim() : 'Unknown';
+	return match ? match[1].trim() : "Unknown";
 }
 
 function extractTownHallLevel(text) {
-	const match = text.match(/town hall[^:]*level[:\s]*(\d+)/i) || text.match(/th[:\s]*(\d+)/i);
+	const match =
+		text.match(/town hall[^:]*level[:\s]*(\d+)/i) ||
+		text.match(/th[:\s]*(\d+)/i);
 	return match ? parseInt(match[1]) : 0;
 }
 
@@ -474,7 +526,7 @@ function extractWeakPoints(text) {
 
 function extractStrategy(text) {
 	const match = text.match(/strategy[:\s]*([^.\n]+)/i);
-	return match ? match[1].trim() : 'Standard attack';
+	return match ? match[1].trim() : "Standard attack";
 }
 
 function extractOptimalSides(text) {
@@ -484,57 +536,80 @@ function extractOptimalSides(text) {
 
 function extractPriorityTargets(text) {
 	const targets = text.match(/target[s]?[:\s]*([^.\n]+)/i);
-	return targets ? targets[1].trim().split(/[,\n]/).slice(0, 3) : ['Storages', 'Defenses'];
+	return targets
+		? targets[1].trim().split(/[,\n]/).slice(0, 3)
+		: ["Storages", "Defenses"];
 }
 
 function extractRiskLevel(text) {
 	const risk = text.match(/risk[:\s]*(low|medium|high)/i);
-	return risk ? risk[1].toLowerCase() : 'medium';
+	return risk ? risk[1].toLowerCase() : "medium";
 }
 
 function extractEntryPoints(text) {
-	const entryMatches = text.match(/entry[^:]*:([^.]+)/i) || text.match(/deploy[^:]*at[^:]*:([^.]+)/i);
-	return entryMatches ? entryMatches[1].trim().split(/[,\n]/).slice(0, 3) : ['Bottom side', 'Left side'];
+	const entryMatches =
+		text.match(/entry[^:]*:([^.]+)/i) ||
+		text.match(/deploy[^:]*at[^:]*:([^.]+)/i);
+	return entryMatches
+		? entryMatches[1].trim().split(/[,\n]/).slice(0, 3)
+		: ["Bottom side", "Left side"];
 }
 
 function extractDeploymentOrder(text) {
-	const orderMatches = text.match(/deployment order[^:]*:([^.]+)/i) || text.match(/first[^:]*:([^.]+)/i);
-	return orderMatches ? orderMatches[1].trim().split(/[,\n]/).slice(0, 5) : ['Giants first', 'Wall Breakers', 'Support troops'];
+	const orderMatches =
+		text.match(/deployment order[^:]*:([^.]+)/i) ||
+		text.match(/first[^:]*:([^.]+)/i);
+	return orderMatches
+		? orderMatches[1].trim().split(/[,\n]/).slice(0, 5)
+		: ["Giants first", "Wall Breakers", "Support troops"];
 }
 
 function extractWallBreakerTargets(text) {
-	const wallMatches = text.match(/wall breaker[s]?[^:]*:([^.]+)/i) || text.match(/wall[s]?[^:]*:([^.]+)/i);
-	return wallMatches ? wallMatches[1].trim().split(/[,\n]/).slice(0, 3) : ['Eastern walls', 'Compartment walls'];
+	const wallMatches =
+		text.match(/wall breaker[s]?[^:]*:([^.]+)/i) ||
+		text.match(/wall[s]?[^:]*:([^.]+)/i);
+	return wallMatches
+		? wallMatches[1].trim().split(/[,\n]/).slice(0, 3)
+		: ["Eastern walls", "Compartment walls"];
 }
 
 function extractHeroDeployment(text) {
-	const heroMatches = text.match(/hero[^:]*deployment[^:]*:([^.]+)/i) || text.match(/hero[s]?[^:]*timing[^:]*:([^.]+)/i);
-	return heroMatches ? heroMatches[1].trim() : 'Deploy heroes after initial breach';
+	const heroMatches =
+		text.match(/hero[^:]*deployment[^:]*:([^.]+)/i) ||
+		text.match(/hero[s]?[^:]*timing[^:]*:([^.]+)/i);
+	return heroMatches
+		? heroMatches[1].trim()
+		: "Deploy heroes after initial breach";
 }
 
 function extractSpellTiming(text) {
-	const spellMatches = text.match(/spell[s]?[^:]*timing[^:]*:([^.]+)/i) || text.match(/spell[s]?[^:]*usage[^:]*:([^.]+)/i);
-	return spellMatches ? spellMatches[1].trim().split(/[,\n]/).slice(0, 3) : ['Heal spell during push', 'Rage for damage'];
+	const spellMatches =
+		text.match(/spell[s]?[^:]*timing[^:]*:([^.]+)/i) ||
+		text.match(/spell[s]?[^:]*usage[^:]*:([^.]+)/i);
+	return spellMatches
+		? spellMatches[1].trim().split(/[,\n]/).slice(0, 3)
+		: ["Heal spell during push", "Rage for damage"];
 }
 
 function extractPathPlanning(text) {
-	const pathMatches = text.match(/path[^:]*:([^.]+)/i) || text.match(/route[^:]*:([^.]+)/i);
-	return pathMatches ? pathMatches[1].trim() : 'Direct path to storages';
+	const pathMatches =
+		text.match(/path[^:]*:([^.]+)/i) || text.match(/route[^:]*:([^.]+)/i);
+	return pathMatches ? pathMatches[1].trim() : "Direct path to storages";
 }
 
 function extractTiming(text) {
 	const timing = text.match(/timing[:\s]*([^.\n]+)/i);
-	return timing ? timing[1].trim() : 'immediate';
+	return timing ? timing[1].trim() : "immediate";
 }
 
 function extractFormation(text) {
 	const formation = text.match(/formation[:\s]*([^.\n]+)/i);
-	return formation ? formation[1].trim() : 'spread';
+	return formation ? formation[1].trim() : "spread";
 }
 
 function extractSupportTroops(text) {
 	const support = text.match(/support[^:]*:([^.\n]+)/i);
-	return support ? support[1].trim().split(',').slice(0, 3) : [];
+	return support ? support[1].trim().split(",").slice(0, 3) : [];
 }
 
 function extractEffectiveness(text) {
@@ -543,32 +618,67 @@ function extractEffectiveness(text) {
 }
 
 function extractPivotDecision(text) {
-	return text.toLowerCase().includes('pivot') || text.toLowerCase().includes('change');
+	return (
+		text.toLowerCase().includes("pivot") ||
+		text.toLowerCase().includes("change")
+	);
 }
 
 function extractNextTroops(text) {
 	const troops = text.match(/next[^:]*:([^.\n]+)/i);
-	return troops ? troops[1].trim() : 'Continue current deployment';
+	return troops ? troops[1].trim() : "Continue current deployment";
 }
 
 function extractTargetPriority(text) {
 	const priority = text.match(/priority[^:]*:([^.\n]+)/i);
-	return priority ? priority[1].trim().split(',').slice(0, 3) : [];
+	return priority ? priority[1].trim().split(",").slice(0, 3) : [];
 }
 
 function extractSpellRecommendations(text) {
 	const spells = text.match(/spell[s]?[^:]*:([^.\n]+)/i);
-	return spells ? spells[1].trim().split(',').slice(0, 3) : [];
+	return spells ? spells[1].trim().split(",").slice(0, 3) : [];
 }
 
 function extractHeroTiming(text) {
 	const hero = text.match(/hero[^:]*:([^.\n]+)/i);
-	return hero ? hero[1].trim() : 'Hold for later';
+	return hero ? hero[1].trim() : "Hold for later";
 }
 
 function extractSuccessProbability(text) {
 	const prob = text.match(/success[^:]*:?\s*(\d+)/i);
 	return prob ? parseInt(prob[1]) : 70;
+}
+
+function extractStepByStepPlan(text) {
+	// Look for numbered steps in the text
+	const stepMatches = text.match(/(\d+\.?\s*[^.\n]+)/g);
+	if (stepMatches) {
+		return stepMatches
+			.slice(0, 10)
+			.map((step) => step.replace(/^\d+\.?\s*/, "").trim())
+			.filter((step) => step.length > 10); // Filter out very short steps
+	}
+
+	// Fallback: look for tactical plan sections
+	const tacticalMatches = text.match(/tactical plan[^:]*:([^0-9]+)/i);
+	if (tacticalMatches) {
+		return tacticalMatches[1]
+			.trim()
+			.split(/[,\n]/)
+			.slice(0, 8)
+			.map((step) => step.trim())
+			.filter((step) => step.length > 5);
+	}
+
+	// Default plan if no specific steps found
+	return [
+		"Deploy tank troops to absorb damage",
+		"Use Wall Breakers to create entry points",
+		"Deploy damage dealers behind tanks",
+		"Target priority defenses first",
+		"Use spells to support main push",
+		"Deploy heroes for core penetration",
+	];
 }
 
 function extractTroopComposition(text) {
@@ -579,17 +689,17 @@ function extractTroopComposition(text) {
 
 function extractSpellSelection(text) {
 	const spells = text.match(/spell[s]?[^:]*:([^.\n]+)/i);
-	return spells ? spells[1].trim().split(',').slice(0, 5) : [];
+	return spells ? spells[1].trim().split(",").slice(0, 5) : [];
 }
 
 function extractHeroSelection(text) {
 	const heroes = text.match(/hero[es]*[^:]*:([^.\n]+)/i);
-	return heroes ? heroes[1].trim().split(',').slice(0, 3) : [];
+	return heroes ? heroes[1].trim().split(",").slice(0, 3) : [];
 }
 
 function extractCCRequest(text) {
 	const cc = text.match(/clan castle[^:]*:([^.\n]+)/i);
-	return cc ? cc[1].trim() : 'Dragons or Electro Dragons';
+	return cc ? cc[1].trim() : "Dragons or Electro Dragons";
 }
 
 function extractExpectedStars(text) {
@@ -599,7 +709,7 @@ function extractExpectedStars(text) {
 
 function extractResourceGain(text) {
 	const resources = text.match(/resource[s]?[^:]*:([^.\n]+)/i);
-	return resources ? resources[1].trim() : 'High potential';
+	return resources ? resources[1].trim() : "High potential";
 }
 
 function extractSuccessFactors(text) {
@@ -629,61 +739,9 @@ function extractPerformanceScore(text) {
 
 function extractFutureRecommendations(text) {
 	const recommendations = text.match(/future[^:]*:([^.\n]+)/i);
-	return recommendations ? recommendations[1].trim().split(/[,\n]/).slice(0, 3) : [];
-}
-
-// Helper functions for visual attack planning
-function extractBaseLayout(text) {
-	const layoutMatches = text.match(/base layout[^:]*:([^.]+)/i) || text.match(/layout[^:]*:([^.]+)/i);
-	return layoutMatches ? layoutMatches[1].trim() : 'Standard base layout detected';
-}
-
-function extractWeaknesses(text) {
-	const weaknessMatches = text.match(/weakness[es]*[^:]*:([^.]+)/i) || text.match(/weak[^:]*:([^.]+)/i);
-	return weaknessMatches ? weaknessMatches[1].trim().split(/[,\n]/).slice(0, 4) : ['Wall gaps identified', 'Exposed storages'];
-}
-
-function extractAttackVectors(text) {
-	const vectorMatches = text.match(/attack vector[s]*[^:]*:([^.]+)/i) || text.match(/approach[^:]*:([^.]+)/i);
-	return vectorMatches ? vectorMatches[1].trim().split(/[,\n]/).slice(0, 3) : ['Southern approach', 'Eastern flank'];
-}
-
-function extractDetailedSteps(text) {
-	const stepMatches = text.match(/step \d+[^:]*:([^.]+)/gi);
-	if (stepMatches) {
-		return stepMatches.slice(0, 8).map(step => step.replace(/step \d+[^:]*:/i, '').trim());
-	}
-	return ['Deploy tanks', 'Break walls', 'Deploy damage dealers', 'Use spells', 'Deploy heroes', 'Cleanup'];
-}
-
-function extractDeploymentZones(text) {
-	const zoneMatches = text.match(/deployment[^:]*:([^.]+)/i) || text.match(/deploy[^:]*zone[s]*[^:]*:([^.]+)/i);
-	return zoneMatches ? zoneMatches[1].trim().split(/[,\n]/).slice(0, 4) : ['Bottom-left corner', 'Southern edge'];
-}
-
-function extractWallTargets(text) {
-	const wallMatches = text.match(/wall[^:]*target[s]*[^:]*:([^.]+)/i) || text.match(/wall section[s]*[^:]*:([^.]+)/i);
-	return wallMatches ? wallMatches[1].trim().split(/[,\n]/).slice(0, 3) : ['Eastern walls', 'Compartment entrance'];
-}
-
-function extractHeroStrategy(text) {
-	const heroMatches = text.match(/hero[^:]*strategy[^:]*:([^.]+)/i) || text.match(/hero[s]*[^:]*usage[^:]*:([^.]+)/i);
-	return heroMatches ? heroMatches[1].trim() : 'Deploy heroes after initial breach to target core';
-}
-
-function extractSpellPlan(text) {
-	const spellMatches = text.match(/spell[^:]*plan[^:]*:([^.]+)/i) || text.match(/spell[s]*[^:]*strategy[^:]*:([^.]+)/i);
-	return spellMatches ? spellMatches[1].trim().split(/[,\n]/).slice(0, 4) : ['Heal during push', 'Rage for damage'];
-}
-
-function extractSuccessMetrics(text) {
-	const metricsMatches = text.match(/success[^:]*:([^.]+)/i) || text.match(/expected[^:]*:([^.]+)/i);
-	return metricsMatches ? metricsMatches[1].trim() : '2-3 star potential with good resource gain';
-}
-
-function extractContingencyPlan(text) {
-	const contingencyMatches = text.match(/contingency[^:]*:([^.]+)/i) || text.match(/if.*fails[^:]*:([^.]+)/i);
-	return contingencyMatches ? contingencyMatches[1].trim() : 'Fallback to cleanup strategy if main plan fails';
+	return recommendations
+		? recommendations[1].trim().split(/[,\n]/).slice(0, 3)
+		: [];
 }
 
 // Start the server
