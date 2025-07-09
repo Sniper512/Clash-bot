@@ -1,0 +1,24 @@
+{
+	"name": "server",
+	"version": "1.0.0",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"start": "node ai-attack-analyzer.js",
+		"dev": "nodemon ai-attack-analyzer.js",
+		"test": "node test-ai-server.js"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@genkit-ai/googleai": "^1.14.0",
+		"cors": "^2.8.5",
+		"dotenv": "^17.1.0",
+		"express": "^5.1.0",
+		"genkit": "^1.14.0"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.10"
+	}
+}
