@@ -5,63 +5,45 @@
 ; Parameters ....: None
 ; Return values .: None
 ; Author ........:
-; Modified ......: Didipe (05-2015), ProMac(2016), MonkeyHunter(03-2017), AI Integration (2025)
+; Modified ......: Didipe (05-2015), ProMac(2016), MonkeyHunter(03-2017)
 ; Remarks .......: This file is part of MyBot, previously known as ClashGameBot. Copyright 2015-2025
 ;                  MyBot is distributed under the terms of the GNU GPL
-;                  Now includes AI-powered attack analysis and optimization
 ; Related .......:
 ; Link ..........: https://github.com/MyBotRun/MyBot/wiki
 ; Example .......: No
 ; ===============================================================================================================================
 
-; Include AI helper functions
-#include "AI_AttackHelper.au3"
-
 Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	If $g_bDebugSetLog Then SetDebugLog("algorithm_AllTroops()", $COLOR_DEBUG)
-	
-	; 🤖 Initialize AI features
-	InitializeAIFeatures()
-	
 	SetSlotSpecialTroops()
 
 	If _Sleep($DELAYALGORITHM_ALLTROOPS1) Then Return
 
 	SmartAttackStrategy($g_iMatchMode) ; detect redarea first to drop any troops
 
-	; 🤖 Get AI analysis for optimal attack strategy
-	Local $aAIAnalysis = GetAIBaseAnalysis(GetAvailableTroopsString(), "Gold, Elixir, Dark Elixir")
 	Local $nbSides = 0
-	
-	; Use AI recommendation for number of sides if available
-	If IsArray($aAIAnalysis) And $aAIAnalysis["optimalSides"] > 0 Then
-		$nbSides = $aAIAnalysis["optimalSides"]
-		SetLog("🤖 AI recommends attacking on " & $nbSides & " side(s)", $COLOR_SUCCESS)
-	Else
-		; Fallback to original logic
-		Switch $g_aiAttackStdDropSides[$g_iMatchMode]
-			Case 0 ;Single sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				SetLog("Attacking on a single side", $COLOR_INFO)
-				$nbSides = 1
-			Case 1 ;Two sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				SetLog("Attacking on two sides", $COLOR_INFO)
-				$nbSides = 2
-			Case 2 ;Three sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				SetLog("Attacking on three sides", $COLOR_INFO)
-				$nbSides = 3
-			Case 3 ;All sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				SetLog("Attacking on all sides", $COLOR_INFO)
-				$nbSides = 4
-			Case 4 ;DE Side - Live Base only ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				SetLog("Attacking on Dark Elixir Side.", $COLOR_INFO)
-				$nbSides = 1
-				If Not ($g_abAttackStdSmartAttack[$g_iMatchMode]) Then GetBuildingEdge($eSideBuildingDES) ; Get DE Storage side when Redline is not used.
-			Case 5 ;TH Side - Live Base only ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				SetLog("Attacking on Town Hall Side.", $COLOR_INFO)
-				$nbSides = 1
-				If Not ($g_abAttackStdSmartAttack[$g_iMatchMode]) Then GetBuildingEdge($eSideBuildingTH) ; Get Townhall side when Redline is not used.
-		EndSwitch
-	EndIf
+	Switch $g_aiAttackStdDropSides[$g_iMatchMode]
+		Case 0 ;Single sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			SetLog("Attacking on a single side", $COLOR_INFO)
+			$nbSides = 1
+		Case 1 ;Two sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			SetLog("Attacking on two sides", $COLOR_INFO)
+			$nbSides = 2
+		Case 2 ;Three sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			SetLog("Attacking on three sides", $COLOR_INFO)
+			$nbSides = 3
+		Case 3 ;All sides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			SetLog("Attacking on all sides", $COLOR_INFO)
+			$nbSides = 4
+		Case 4 ;DE Side - Live Base only ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			SetLog("Attacking on Dark Elixir Side.", $COLOR_INFO)
+			$nbSides = 1
+			If Not ($g_abAttackStdSmartAttack[$g_iMatchMode]) Then GetBuildingEdge($eSideBuildingDES) ; Get DE Storage side when Redline is not used.
+		Case 5 ;TH Side - Live Base only ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			SetLog("Attacking on Town Hall Side.", $COLOR_INFO)
+			$nbSides = 1
+			If Not ($g_abAttackStdSmartAttack[$g_iMatchMode]) Then GetBuildingEdge($eSideBuildingTH) ; Get Townhall side when Redline is not used.
+	EndSwitch
 	If ($nbSides = 0) Then Return
 	If _Sleep($DELAYALGORITHM_ALLTROOPS2) Then Return
 
@@ -348,49 +330,51 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 				Local $listInfoDeploy[23][5] = [[$eGiant, $nbSides, 1, 1, $g_iSlotsGiants] _
 						, [$eSGiant, $nbSides, 1, 1, $g_iSlotsGiants] _
 						, ["CC", 1, 1, 1, 1] _
-						, [$eBarb, $nbSides, 1, 2, 2] _
-						, [$eSBarb, $nbSides, 1, 2, 2] _
+						, [$eBarb, $nbSides, 1, 2, 0] _
+						, [$eSBarb, $nbSides, 1, 2, 0] _
 						, [$eWall, $nbSides, 1, 1, 1] _
 						, [$eSWall, $nbSides, 1, 1, 1] _
-						, [$eArch, $nbSides, 1, 2, 2] _
-						, [$eSArch, $nbSides, 1, 2, 2] _
-						, [$eBarb, $nbSides, 2, 2, 2] _
-						, [$eSBarb, $nbSides, 2, 2, 2] _
-						, [$eGobl, $nbSides, 1, 2, 2] _
-						, [$eSGobl, $nbSides, 1, 2, 2] _
+						, [$eArch, $nbSides, 1, 2, 0] _
+						, [$eSArch, $nbSides, 1, 2, 0] _
+						, [$eBarb, $nbSides, 2, 2, 0] _
+						, [$eSBarb, $nbSides, 2, 2, 0] _
+						, [$eGobl, $nbSides, 1, 2, 0] _
+						, [$eSGobl, $nbSides, 1, 2, 0] _
 						, [$eHogs, $nbSides, 1, 1, 1] _
 						, [$eWiza, $nbSides, 1, 1, 0] _
 						, [$eSWiza, $nbSides, 1, 1, 0] _
 						, [$eMini, $nbSides, 1, 1, 0] _
 						, [$eSMini, $nbSides, 1, 1, 0] _
-						, [$eArch, $nbSides, 2, 2, 2] _
-						, [$eSArch, $nbSides, 2, 2, 2] _
-						, [$eGobl, $nbSides, 1, 1, 1] _
-						, [$eSGobl, $nbSides, 1, 1, 1]]
+						, [$eArch, $nbSides, 2, 2, 0] _
+						, [$eSArch, $nbSides, 2, 2, 0] _
+						, [$eGobl, $nbSides, 2, 2, 0] _
+						, [$eSGobl, $nbSides, 2, 2, 0] _
+						, ["HEROES", 1, 2, 1, 1]]
 			Case Else
 				SetLog("Algorithm type unavailable, defaulting to regular", $COLOR_ERROR)
 				Local $listInfoDeploy[23][5] = [[$eGiant, $nbSides, 1, 1, $g_iSlotsGiants] _
 						, [$eSGiant, $nbSides, 1, 1, $g_iSlotsGiants] _
 						, ["CC", 1, 1, 1, 1] _
-						, [$eBarb, $nbSides, 1, 2, 2] _
-						, [$eSBarb, $nbSides, 1, 2, 2] _
+						, [$eBarb, $nbSides, 1, 2, 0] _
+						, [$eSBarb, $nbSides, 1, 2, 0] _
 						, [$eWall, $nbSides, 1, 1, 1] _
 						, [$eSWall, $nbSides, 1, 1, 1] _
-						, [$eArch, $nbSides, 1, 2, 2] _
-						, [$eSArch, $nbSides, 1, 2, 2] _
-						, [$eBarb, $nbSides, 2, 2, 2] _
-						, [$eSBarb, $nbSides, 2, 2, 2] _
-						, [$eGobl, $nbSides, 1, 2, 2] _
-						, [$eSGobl, $nbSides, 1, 2, 2] _
+						, [$eArch, $nbSides, 1, 2, 0] _
+						, [$eSArch, $nbSides, 1, 2, 0] _
+						, [$eBarb, $nbSides, 2, 2, 0] _
+						, [$eSBarb, $nbSides, 2, 2, 0] _
+						, [$eGobl, $nbSides, 1, 2, 0] _
+						, [$eSGobl, $nbSides, 1, 2, 0] _
 						, [$eHogs, $nbSides, 1, 1, 1] _
 						, [$eWiza, $nbSides, 1, 1, 0] _
 						, [$eSWiza, $nbSides, 1, 1, 0] _
 						, [$eMini, $nbSides, 1, 1, 0] _
 						, [$eSMini, $nbSides, 1, 1, 0] _
-						, [$eArch, $nbSides, 2, 2, 2] _
-						, [$eSArch, $nbSides, 2, 2, 2] _
-						, [$eGobl, $nbSides, 1, 1, 1] _
-						, [$eSGobl, $nbSides, 1, 1, 1]]
+						, [$eArch, $nbSides, 2, 2, 0] _
+						, [$eSArch, $nbSides, 2, 2, 0] _
+						, [$eGobl, $nbSides, 2, 2, 0] _
+						, [$eSGobl, $nbSides, 2, 2, 0] _
+						, ["HEROES", 1, 2, 1, 1]]
 		EndSwitch
 	EndIf
 
@@ -402,16 +386,6 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	$g_aiDeployHeroesPosition[1] = -1
 
 	LaunchTroop2($listInfoDeploy, $g_iClanCastleSlot, $g_iKingSlot, $g_iQueenSlot, $g_iPrinceSlot, $g_iWardenSlot, $g_iChampionSlot)
-
-	; 🤖 Mid-battle AI adaptation check
-	Local $iBattleProgress = 50 ; Estimate battle progress at this point
-	Local $sRemainingTroops = GetAvailableTroopsString()
-	Local $aAIAdaptation = GetAIBattleAdaptation($iBattleProgress, $sRemainingTroops, "Mid-battle assessment")
-	
-	If IsArray($aAIAdaptation) And $aAIAdaptation["shouldPivot"] Then
-		SetLog("🔄 AI suggests strategy adaptation!", $COLOR_ACTION)
-		; Could implement strategy changes here based on AI recommendations
-	EndIf
 
 	CheckHeroesHealth()
 
@@ -428,12 +402,6 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 			ExitLoop ;Check remaining quantities
 		EndIf
 		For $i = $eBarb To $eFurn ; launch all remaining troops
-			; 🤖 Get AI deployment advice for each troop type
-			Local $aDeploymentAdvice = GetAIDeploymentStrategy($i, 1, "Cleanup phase")
-			If IsArray($aDeploymentAdvice) Then
-				SetLog("🎯 AI: " & $aDeploymentAdvice["formation"] & " formation for " & GetTroopName($i), $COLOR_INFO)
-			EndIf
-			
 			If LaunchTroop($i, $nbSides, 1, 1, 1) Then
 				CheckHeroesHealth()
 				If _Sleep($DELAYALGORITHM_ALLTROOPS5) Then Return
@@ -442,12 +410,6 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	Next
 
 	CheckHeroesHealth()
-
-	; 🤖 Send battle results to AI for learning
-	Local $sBattleOutcome = "Battle completed"
-	Local $sStrategyUsed = "AllTroops algorithm with " & $nbSides & " sides"
-	Local $sTroopsUsed = GetAvailableTroopsString()
-	SendAIBattleLearning($sBattleOutcome, $sStrategyUsed, $sTroopsUsed, "Attack completed")
 
 	SetLog("Finished Attacking, waiting for the battle to end")
 EndFunc   ;==>algorithm_AllTroops
