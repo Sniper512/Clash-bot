@@ -162,3 +162,4 @@ lib/*.html
 SQLite_exportedData.csv
 build/au3Stripper/Au3Stripper.Log
 *.lnk
+

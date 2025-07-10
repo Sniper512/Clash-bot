@@ -190,7 +190,8 @@ Func getAllEmulators()
 			SetLog("  - " & $aEmulator[$i] & " version: " & $emuVer, $COLOR_SUCCESS)
 		Next
 	Else
-		SetLog("No Emulator found in your machine")
+		SetLog("*** CUSTOM MESSAGE: No Emulator found in your machine, says Jafar ***", $COLOR_ERROR)
+		MsgBox(0, "Custom Test", "Your changes ARE working! - Jafar says no emulators found")
 		Return
 	EndIf
 
