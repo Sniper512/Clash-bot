@@ -5,7 +5,6 @@ This enhanced version of MyBot integrates advanced AI capabilities using Google'
 ## 🚀 Features
 
 ### AI-Powered Attack Analysis
-
 - **Base Analysis**: AI analyzes enemy base layouts and suggests optimal attack strategies
 - **Real-time Adaptation**: Dynamic strategy adjustments during battle based on current conditions
 - **Troop Deployment Optimization**: Smart troop placement recommendations
@@ -13,7 +12,6 @@ This enhanced version of MyBot integrates advanced AI capabilities using Google'
 - **Battle Learning**: AI learns from battle outcomes to improve future strategies
 
 ### Key AI Endpoints
-
 1. **Base Analysis** (`/api/analyze-base`) - Analyzes base layout and vulnerabilities
 2. **Deployment Optimizer** (`/api/optimize-deployment`) - Optimizes troop placement
 3. **Strategy Adaptation** (`/api/adapt-strategy`) - Real-time battle adjustments
@@ -23,7 +21,6 @@ This enhanced version of MyBot integrates advanced AI capabilities using Google'
 ## 🛠️ Setup Instructions
 
 ### 1. Prerequisites
-
 - Node.js (version 18+)
 - Google AI API Key (Gemini)
 - MyBot.run (existing installation)
@@ -31,26 +28,22 @@ This enhanced version of MyBot integrates advanced AI capabilities using Google'
 ### 2. Server Setup
 
 1. **Navigate to Server directory:**
-
    ```bash
    cd "C:\Users\alimu\Desktop\Clash-bot\Server"
    ```
 
 2. **Install dependencies:**
-
    ```bash
    npm install
    ```
 
 3. **Set up environment variables:**
    Create `.env.local` file with your Google API key:
-
    ```
    GOOGLE_API_KEY=your_google_ai_api_key_here
    ```
 
 4. **Start the AI server:**
-
    ```bash
    npm start
    ```
@@ -91,7 +84,6 @@ SendAIBattleLearning($sBattleOutcome, $sStrategyUsed, $sTroopsUsed, "Attack comp
 ## 🧪 Testing
 
 ### Test the AI Server:
-
 ```bash
 npm test
 ```
@@ -99,7 +91,6 @@ npm test
 This will test all AI endpoints and verify they're working correctly.
 
 ### Manual Testing:
-
 1. Start the server: `npm start`
 2. Visit health check: `http://localhost:3000/health`
 3. Run the bot with AI features enabled
@@ -107,31 +98,26 @@ This will test all AI endpoints and verify they're working correctly.
 ## 🎯 AI Features in Action
 
 ### 1. Base Analysis
-
 - **Input**: Available troops, target resources
 - **Output**: Base type, weak points, recommended strategy, optimal sides, risk level
 - **Integration**: Determines number of attack sides automatically
 
 ### 2. Deployment Optimization
-
 - **Input**: Troop type, quantity, battle situation
 - **Output**: Deployment timing, formation, support recommendations
 - **Integration**: Guides troop placement decisions
 
 ### 3. Real-time Adaptation
-
 - **Input**: Battle progress, remaining troops, enemy status
 - **Output**: Strategy pivot recommendations, next troop suggestions
 - **Integration**: Mid-battle strategy adjustments
 
 ### 4. Army Optimization
-
 - **Input**: Target base type, attack goals, TH level
 - **Output**: Optimal troop composition, spell selection, expected stars
 - **Integration**: Pre-battle army recommendations
 
 ### 5. Battle Learning
-
 - **Input**: Battle results, strategy used, outcome
 - **Output**: Performance analysis, improvement suggestions
 - **Integration**: Post-battle learning and optimization
@@ -139,7 +125,6 @@ This will test all AI endpoints and verify they're working correctly.
 ## 🔧 Configuration
 
 ### AI Settings (in AutoIt):
-
 ```autoit
 Global $g_sAIServerURL = "http://localhost:3000"  ; AI server URL
 Global $g_bUseAIAnalysis = True                   ; Enable/disable AI features
@@ -147,20 +132,17 @@ Global $g_iAITimeout = 30000                      ; 30 seconds timeout for AI re
 ```
 
 ### Fallback Behavior:
-
 If the AI server is unavailable, the bot automatically falls back to the original algorithm without AI enhancements.
 
 ## 📈 Performance Benefits
 
 ### Expected Improvements:
-
 - **Attack Success Rate**: 15-25% improvement in successful attacks
 - **Resource Efficiency**: Better resource-to-troop ratio
 - **Strategy Adaptation**: Dynamic responses to different base layouts
 - **Learning Capability**: Continuous improvement from battle outcomes
 
 ### AI Advantages:
-
 - **Pattern Recognition**: Identifies base weaknesses humans might miss
 - **Real-time Processing**: Instant analysis during battle
 - **Data-driven Decisions**: Based on large datasets and patterns
@@ -171,19 +153,16 @@ If the AI server is unavailable, the bot automatically falls back to the origina
 ### Common Issues:
 
 1. **AI Server Not Starting:**
-
    - Check if Google API key is set correctly
    - Verify Node.js installation
    - Check port 3000 availability
 
 2. **Connection Errors:**
-
    - Ensure server is running on localhost:3000
    - Check firewall settings
    - Verify network connectivity
 
 3. **API Key Issues:**
-
    - Verify Google AI API key is valid
    - Check API quotas and limits
    - Ensure `.env.local` file is in correct location
@@ -196,7 +175,6 @@ If the AI server is unavailable, the bot automatically falls back to the origina
 ## 🔮 Future Enhancements
 
 ### Planned Features:
-
 - **Visual Base Analysis**: AI processes base screenshots
 - **Historical Pattern Analysis**: Learn from community attack data
 - **Predictive Modeling**: Forecast battle outcomes
@@ -204,7 +182,6 @@ If the AI server is unavailable, the bot automatically falls back to the origina
 - **Advanced Spell Timing**: AI-optimized spell deployment
 
 ### Advanced AI Features:
-
 - **Computer Vision**: Analyze base layouts from screenshots
 - **Reinforcement Learning**: Self-improving attack strategies
 - **Ensemble Models**: Multiple AI models working together
@@ -213,7 +190,6 @@ If the AI server is unavailable, the bot automatically falls back to the origina
 ## 📝 Logs and Monitoring
 
 ### AI Integration Logs:
-
 - `🤖 Initializing AI Attack Analysis...`
 - `✅ AI Server connected successfully`
 - `🎯 AI recommends: [strategy]`
@@ -221,7 +197,6 @@ If the AI server is unavailable, the bot automatically falls back to the origina
 - `📊 AI performance score: X/10`
 
 ### Monitoring:
-
 - Server health checks
 - API response times
 - AI recommendation accuracy
