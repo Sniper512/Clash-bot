@@ -3365,7 +3365,12 @@ Func _AndroidFastClick($x, $y, $times = 1, $speed = 0, $checkProblemAffect = Tru
 				Local $BTN_TOUCH_DOWN = True
 				Local $BTN_TOUCH_UP = True
 				If $ReleaseClicks = True Then
-					$Click = $aiAndroidAdbClicks[($i - 1) * $recordsNum + $j + 1] ; fixed Array variable has incorrect number of subscripts
+					Local $clickIndex = $i * $recordsClicks + $j + 1
+					If $clickIndex <= UBound($aiAndroidAdbClicks) - 1 Then
+						$Click = $aiAndroidAdbClicks[$clickIndex] ; fixed Array variable has incorrect number of subscripts with bounds checking
+					Else
+						ContinueLoop ; Skip if index is out of bounds
+					EndIf
 					$x = $Click[0]
 					$y = $Click[1]
 					Execute($g_sAndroidEmulator & "AdjustClickCoordinates($x,$y)")
@@ -3700,7 +3705,12 @@ Func AndroidMinitouchClick($x, $y, $times = 1, $speed = 150, $checkProblemAffect
 				Local $BTN_TOUCH_DOWN = True
 				Local $BTN_TOUCH_UP = True
 				If $ReleaseClicks = True Then
-					$Click = $aiAndroidAdbClicks[($i - 1) * $recordsClicks + $j + 1] ; seen here incorrect number of subscripts error
+					Local $clickIndex = $i * $recordsClicks + $j + 1
+					If $clickIndex <= UBound($aiAndroidAdbClicks) - 1 Then
+						$Click = $aiAndroidAdbClicks[$clickIndex] ; fixed incorrect number of subscripts error with bounds checking
+					Else
+						ContinueLoop ; Skip if index is out of bounds
+					EndIf
 					$x = $Click[0]
 					$y = $Click[1]
 					Execute($g_sAndroidEmulator & "AdjustClickCoordinates($x,$y)")

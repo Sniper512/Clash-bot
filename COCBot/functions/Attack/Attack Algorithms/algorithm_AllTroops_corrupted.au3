@@ -18,17 +18,10 @@
 
 Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	; Initialize color constants with safe fallbacks
-	Local $iColorSuccess = 0x00FF00
-	If IsDeclared("COLOR_SUCCESS") Then $iColorSuccess = $COLOR_SUCCESS
-	
-	Local $iColorInfo = 0x0000FF
-	If IsDeclared("COLOR_INFO") Then $iColorInfo = $COLOR_INFO
-	
-	Local $iColorError = 0xFF0000
-	If IsDeclared("COLOR_ERROR") Then $iColorError = $COLOR_ERROR
-	
-	Local $iColorDebug = 0xFF00FF
-	If IsDeclared("COLOR_DEBUG") Then $iColorDebug = $COLOR_DEBUG
+	Local $iColorSuccess = IsDeclared("COLOR_SUCCESS") ? $COLOR_SUCCESS : 0x00FF00
+	Local $iColorInfo = IsDeclared("COLOR_INFO") ? $COLOR_INFO : 0x0000FF
+	Local $iColorError = IsDeclared("COLOR_ERROR") ? $COLOR_ERROR : 0xFF0000
+	Local $iColorDebug = IsDeclared("COLOR_DEBUG") ? $COLOR_DEBUG : 0xFF00FF
 	
 	; TEST: Check if this function is being called
 	SetLog("🚀 algorithm_AllTroops FUNCTION CALLED!", $iColorSuccess)
@@ -55,15 +48,13 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	SetLog("✅ AI INTEGRATION TEST COMPLETED - Continuing with normal bot operation", $iColorSuccess)
 	
 	; Continue with normal function after test
-	Local $bDebugMode = False
-	If IsDeclared("g_bDebugSetLog") Then $bDebugMode = $g_bDebugSetLog
+	Local $bDebugMode = IsDeclared("g_bDebugSetLog") ? $g_bDebugSetLog : False
 	SetSlotSpecialTroops()
 
 	If IsDeclared("DELAYALGORITHM_ALLTROOPS1") And _Sleep($DELAYALGORITHM_ALLTROOPS1) Then Return
 
 	; Check if match mode variable exists
-	Local $iMatchMode = 0
-	If IsDeclared("g_iMatchMode") Then $iMatchMode = $g_iMatchMode
+	Local $iMatchMode = IsDeclared("g_iMatchMode") ? $g_iMatchMode : 0
 	SmartAttackStrategy($iMatchMode) ; detect redarea first to drop any troops
 
 	Local $nbSides = 0
@@ -209,15 +200,13 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 			SetLog("AI strategy loaded successfully with " & UBound($aAIStrategy) & " entries", $iColorSuccess)
 		Else
 			SetLog("AI strategy invalid, using fallback", $iColorError)
-			Local $iSafeSlots = 2
-			If IsDeclared("g_iSlotsGiants") Then $iSafeSlots = $g_iSlotsGiants
+			Local $iSafeSlots = IsDeclared("g_iSlotsGiants") ? $g_iSlotsGiants : 2
 			$listInfoDeploy = _CreateFallbackStrategy($nbSides, $iSafeSlots)
 		EndIf
 	Else
 		SetLog("AI strategy generation failed, using fallback", $iColorError)
 		; Fallback to default strategy with safety check
-		Local $iSafeSlots = 2
-		If IsDeclared("g_iSlotsGiants") Then $iSafeSlots = $g_iSlotsGiants
+		Local $iSafeSlots = IsDeclared("g_iSlotsGiants") ? $g_iSlotsGiants : 2
 		$listInfoDeploy = _CreateFallbackStrategy($nbSides, $iSafeSlots)
 	EndIf
 
@@ -234,56 +223,28 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	EndIf
 
 	; Launch troops with safe variable checking
-	Local $iClanCastleSlot = -1
-	If IsDeclared("g_iClanCastleSlot") Then $iClanCastleSlot = $g_iClanCastleSlot
-	
-	Local $iKingSlot = -1
-	If IsDeclared("g_iKingSlot") Then $iKingSlot = $g_iKingSlot
-	
-	Local $iQueenSlot = -1
-	If IsDeclared("g_iQueenSlot") Then $iQueenSlot = $g_iQueenSlot
-	
-	Local $iPrinceSlot = -1
-	If IsDeclared("g_iPrinceSlot") Then $iPrinceSlot = $g_iPrinceSlot
-	
-	Local $iWardenSlot = -1
-	If IsDeclared("g_iWardenSlot") Then $iWardenSlot = $g_iWardenSlot
-	
-	Local $iChampionSlot = -1
-	If IsDeclared("g_iChampionSlot") Then $iChampionSlot = $g_iChampionSlot
+	Local $iClanCastleSlot = IsDeclared("g_iClanCastleSlot") ? $g_iClanCastleSlot : -1
+	Local $iKingSlot = IsDeclared("g_iKingSlot") ? $g_iKingSlot : -1
+	Local $iQueenSlot = IsDeclared("g_iQueenSlot") ? $g_iQueenSlot : -1
+	Local $iPrinceSlot = IsDeclared("g_iPrinceSlot") ? $g_iPrinceSlot : -1
+	Local $iWardenSlot = IsDeclared("g_iWardenSlot") ? $g_iWardenSlot : -1
+	Local $iChampionSlot = IsDeclared("g_iChampionSlot") ? $g_iChampionSlot : -1
 	
 	; Final validation of the strategy array before launching troops
 	$listInfoDeploy = _ValidateStrategyArray($listInfoDeploy, $nbSides)
 	
 	; ABSOLUTE FINAL SAFETY CHECK - if anything is still wrong, force a simple fallback
-	Local $bArrayValid = False
-	If IsArray($listInfoDeploy) Then
-		Local $iDims = UBound($listInfoDeploy, 0)
-		If $iDims = 2 Then
-			Local $iRows = UBound($listInfoDeploy, 1)
-			Local $iCols = UBound($listInfoDeploy, 2)
-			If $iRows > 0 And $iCols = 5 Then
-				$bArrayValid = True
-			EndIf
-		EndIf
-	EndIf
-	
-	If Not $bArrayValid Then
+	If Not IsArray($listInfoDeploy) Or UBound($listInfoDeploy, 0) <> 2 Or UBound($listInfoDeploy, 1) = 0 Or UBound($listInfoDeploy, 2) <> 5 Then
 		SetLog("EMERGENCY: Final safety check failed. Creating emergency fallback strategy.", $iColorError)
 		; Create the simplest possible valid strategy
 		Local $emergencyStrategy[3][5]
-		
-		Local $eBarbDefault = 0
-		If IsDeclared("eBarb") Then $eBarbDefault = $eBarb
-		$emergencyStrategy[0][0] = $eBarbDefault
+		$emergencyStrategy[0][0] = IsDeclared("eBarb") ? $eBarb : 0
 		$emergencyStrategy[0][1] = $nbSides
 		$emergencyStrategy[0][2] = 1
 		$emergencyStrategy[0][3] = 1
 		$emergencyStrategy[0][4] = 0
 		
-		Local $eArchDefault = 1
-		If IsDeclared("eArch") Then $eArchDefault = $eArch
-		$emergencyStrategy[1][0] = $eArchDefault
+		$emergencyStrategy[1][0] = IsDeclared("eArch") ? $eArch : 1
 		$emergencyStrategy[1][1] = $nbSides
 		$emergencyStrategy[1][2] = 1
 		$emergencyStrategy[1][3] = 1
@@ -300,33 +261,13 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 	
 	; 🔍 DEBUG: Final validation before LaunchTroop2
 	SetLog("🔍 FINAL DEBUG: About to call LaunchTroop2 with array:", $iColorDebug)
-	If IsArray($listInfoDeploy) Then
-		Local $iDims = UBound($listInfoDeploy, 0)
-		SetLog("🔍 Array is valid, dimensions: " & $iDims & "D", $iColorDebug)
-		
-		If $iDims >= 1 Then
-			Local $iRows = UBound($listInfoDeploy, 1)
-			SetLog("🔍 Rows: " & $iRows, $iColorDebug)
-			
-			If $iDims >= 2 Then
-				Local $iCols = UBound($listInfoDeploy, 2)
-				SetLog("🔍 Columns: " & $iCols, $iColorDebug)
-				
-				; Check if array has valid data
-				If $iRows > 0 And $iCols >= 5 Then
-					SetLog("🔍 First entry: [0][0]=" & $listInfoDeploy[0][0] & ", [0][1]=" & $listInfoDeploy[0][1] & ", [0][2]=" & $listInfoDeploy[0][2] & ", [0][3]=" & $listInfoDeploy[0][3] & ", [0][4]=" & $listInfoDeploy[0][4], $iColorDebug)
-				Else
-					SetLog("🔍 ERROR: Invalid array dimensions - Rows:" & $iRows & " Cols:" & $iCols, $iColorError)
-				EndIf
-			Else
-				SetLog("🔍 ERROR: Array is not 2D!", $iColorError)
-			EndIf
-		Else
-			SetLog("🔍 ERROR: Array has no rows!", $iColorError)
-		EndIf
+	SetLog("🔍 Array dimensions: UBound(listInfoDeploy,0)=" & UBound($listInfoDeploy,0) & ", UBound(listInfoDeploy,1)=" & UBound($listInfoDeploy,1) & ", UBound(listInfoDeploy,2)=" & UBound($listInfoDeploy,2), $iColorDebug)
+	
+	; Check if array has valid data
+	If UBound($listInfoDeploy,1) > 0 Then
+		SetLog("🔍 First entry: [0][0]=" & $listInfoDeploy[0][0] & ", [0][1]=" & $listInfoDeploy[0][1] & ", [0][2]=" & $listInfoDeploy[0][2] & ", [0][3]=" & $listInfoDeploy[0][3] & ", [0][4]=" & $listInfoDeploy[0][4], $iColorDebug)
 	Else
-		SetLog("🔍 CRITICAL ERROR: listInfoDeploy is not an array!", $iColorError)
-		Return ; Exit function to prevent crash
+		SetLog("🔍 ERROR: listInfoDeploy has 0 rows!", $iColorError)
 	EndIf
 	
 	; Additional safety check for 2D array
@@ -352,12 +293,8 @@ Func algorithm_AllTroops() ;Attack Algorithm for all existing troops
 			ExitLoop ;Check remaining quantities
 		EndIf
 		; Check if troop constants exist before using them
-		Local $iStartTroop = 0
-		If IsDeclared("eBarb") Then $iStartTroop = $eBarb
-		
-		Local $iEndTroop = 20
-		If IsDeclared("eFurn") Then $iEndTroop = $eFurn
-		
+		Local $iStartTroop = IsDeclared("eBarb") ? $eBarb : 0
+		Local $iEndTroop = IsDeclared("eFurn") ? $eFurn : 20
 		For $i = $iStartTroop To $iEndTroop ; launch all remaining troops
 			If LaunchTroop($i, $nbSides, 1, 1, 1) Then
 				CheckHeroesHealth()
@@ -419,30 +356,15 @@ Func SetSlotSpecialTroops()
 	Next
 
 	; Debug logging with safe variable checking
-	Local $bDebugMode = False
-	If IsDeclared("g_bDebugSetLog") Then $bDebugMode = $g_bDebugSetLog
-	
+	Local $bDebugMode = IsDeclared("g_bDebugSetLog") ? $g_bDebugSetLog : False
 	If $bDebugMode Then
-		Local $iColorDebug = 0xFF0000
-		If IsDeclared("COLOR_DEBUG") Then $iColorDebug = $COLOR_DEBUG
-		
-		Local $iKing = -1
-		If IsDeclared("g_iKingSlot") Then $iKing = $g_iKingSlot
-		
-		Local $iQueen = -1
-		If IsDeclared("g_iQueenSlot") Then $iQueen = $g_iQueenSlot
-		
-		Local $iPrince = -1
-		If IsDeclared("g_iPrinceSlot") Then $iPrince = $g_iPrinceSlot
-		
-		Local $iWarden = -1
-		If IsDeclared("g_iWardenSlot") Then $iWarden = $g_iWardenSlot
-		
-		Local $iChampion = -1
-		If IsDeclared("g_iChampionSlot") Then $iChampion = $g_iChampionSlot
-		
-		Local $iClanCastle = -1
-		If IsDeclared("g_iClanCastleSlot") Then $iClanCastle = $g_iClanCastleSlot
+		Local $iColorDebug = IsDeclared("COLOR_DEBUG") ? $COLOR_DEBUG : 0xFF0000
+		Local $iKing = IsDeclared("g_iKingSlot") ? $g_iKingSlot : -1
+		Local $iQueen = IsDeclared("g_iQueenSlot") ? $g_iQueenSlot : -1
+		Local $iPrince = IsDeclared("g_iPrinceSlot") ? $g_iPrinceSlot : -1
+		Local $iWarden = IsDeclared("g_iWardenSlot") ? $g_iWardenSlot : -1
+		Local $iChampion = IsDeclared("g_iChampionSlot") ? $g_iChampionSlot : -1
+		Local $iClanCastle = IsDeclared("g_iClanCastleSlot") ? $g_iClanCastleSlot : -1
 		
 		SetDebugLog("SetSlotSpecialTroops() King Slot: " & $iKing, $iColorDebug)
 		SetDebugLog("SetSlotSpecialTroops() Queen Slot: " & $iQueen, $iColorDebug)
@@ -484,8 +406,7 @@ EndFunc   ;==>CloseBattle
 
 Func SmartAttackStrategy($imode)
 	; Initialize color constants with safe fallbacks
-	Local $iColorInfo = 0x0000FF
-	If IsDeclared("COLOR_INFO") Then $iColorInfo = $COLOR_INFO
+	Local $iColorInfo = IsDeclared("COLOR_INFO") ? $COLOR_INFO : 0x0000FF
 	
 	; Check if smart attack is enabled
 	If IsDeclared("g_abAttackStdSmartAttack") And IsArray($g_abAttackStdSmartAttack) And UBound($g_abAttackStdSmartAttack) > $imode Then
@@ -548,14 +469,9 @@ Func SmartAttackStrategy($imode)
 						EndIf
 						
 						SetLog("Located  (in " & Round(__TimerDiff($hTimer) / 1000, 2) & " seconds) :")
-						Local $iMineCount = 0
-						If IsDeclared("g_aiPixelMine") And IsArray($g_aiPixelMine) Then $iMineCount = UBound($g_aiPixelMine)
-						
-						Local $iElixirCount = 0
-						If IsDeclared("g_aiPixelElixir") And IsArray($g_aiPixelElixir) Then $iElixirCount = UBound($g_aiPixelElixir)
-						
-						Local $iDarkElixirCount = 0
-						If IsDeclared("g_aiPixelDarkElixir") And IsArray($g_aiPixelDarkElixir) Then $iDarkElixirCount = UBound($g_aiPixelDarkElixir)
+						Local $iMineCount = IsDeclared("g_aiPixelMine") And IsArray($g_aiPixelMine) ? UBound($g_aiPixelMine) : 0
+						Local $iElixirCount = IsDeclared("g_aiPixelElixir") And IsArray($g_aiPixelElixir) ? UBound($g_aiPixelElixir) : 0
+						Local $iDarkElixirCount = IsDeclared("g_aiPixelDarkElixir") And IsArray($g_aiPixelDarkElixir) ? UBound($g_aiPixelDarkElixir) : 0
 						
 						SetLog("[" & $iMineCount & "] Gold Mines")
 						SetLog("[" & $iElixirCount & "] Elixir Collectors")
@@ -715,9 +631,7 @@ Func _CreateFallbackStrategy($nbSides, $iSlotsGiants)
 	Local $fallbackStrategy[10][5]
 	
 	; Default strategy pattern: Giants first, then wallbreakers, then main troops, then heroes
-	Local $eGiantValue = 2
-	If IsDeclared("eGiant") Then $eGiantValue = $eGiant
-	$fallbackStrategy[0][0] = $eGiantValue
+	$fallbackStrategy[0][0] = IsDeclared("eGiant") ? $eGiant : 2
 	$fallbackStrategy[0][1] = $nbSides
 	$fallbackStrategy[0][2] = 1
 	$fallbackStrategy[0][3] = 1
@@ -729,25 +643,19 @@ Func _CreateFallbackStrategy($nbSides, $iSlotsGiants)
 	$fallbackStrategy[1][3] = 1
 	$fallbackStrategy[1][4] = 1
 	
-	Local $eWallValue = 5
-	If IsDeclared("eWall") Then $eWallValue = $eWall
-	$fallbackStrategy[2][0] = $eWallValue
+	$fallbackStrategy[2][0] = IsDeclared("eWall") ? $eWall : 5
 	$fallbackStrategy[2][1] = $nbSides
 	$fallbackStrategy[2][2] = 1
 	$fallbackStrategy[2][3] = 1
 	$fallbackStrategy[2][4] = 1
 	
-	Local $eBarbValue = 0
-	If IsDeclared("eBarb") Then $eBarbValue = $eBarb
-	$fallbackStrategy[3][0] = $eBarbValue
+	$fallbackStrategy[3][0] = IsDeclared("eBarb") ? $eBarb : 0
 	$fallbackStrategy[3][1] = $nbSides
 	$fallbackStrategy[3][2] = 1
 	$fallbackStrategy[3][3] = 1
 	$fallbackStrategy[3][4] = 0
 	
-	Local $eArchValue = 1
-	If IsDeclared("eArch") Then $eArchValue = $eArch
-	$fallbackStrategy[4][0] = $eArchValue
+	$fallbackStrategy[4][0] = IsDeclared("eArch") ? $eArch : 1
 	$fallbackStrategy[4][1] = $nbSides
 	$fallbackStrategy[4][2] = 1
 	$fallbackStrategy[4][3] = 1
@@ -774,22 +682,16 @@ EndFunc   ;==>_CreateFallbackStrategy
 ; Final validation function for the strategy array
 Func _ValidateStrategyArray($aStrategy, $nbSides)
 	; Initialize color constants with safe fallbacks
-	Local $iColorDebug = 0xFF00FF
-	If IsDeclared("COLOR_DEBUG") Then $iColorDebug = $COLOR_DEBUG
-	
-	Local $iColorError = 0xFF0000
-	If IsDeclared("COLOR_ERROR") Then $iColorError = $COLOR_ERROR
-	
-	Local $iColorSuccess = 0x00FF00
-	If IsDeclared("COLOR_SUCCESS") Then $iColorSuccess = $COLOR_SUCCESS
+	Local $iColorDebug = IsDeclared("COLOR_DEBUG") ? $COLOR_DEBUG : 0xFF00FF
+	Local $iColorError = IsDeclared("COLOR_ERROR") ? $COLOR_ERROR : 0xFF0000
+	Local $iColorSuccess = IsDeclared("COLOR_SUCCESS") ? $COLOR_SUCCESS : 0x00FF00
 	
 	SetLog("Validating strategy array before deployment...", $iColorDebug)
 	
 	; Check if it's even an array
 	If Not IsArray($aStrategy) Then
 		SetLog("CRITICAL: Strategy is not an array. Creating fallback.", $iColorError)
-		Local $iSafeSlots = 2
-		If IsDeclared("g_iSlotsGiants") Then $iSafeSlots = $g_iSlotsGiants
+		Local $iSafeSlots = IsDeclared("g_iSlotsGiants") ? $g_iSlotsGiants : 2
 		Return _CreateFallbackStrategy($nbSides, $iSafeSlots)
 	EndIf
 	
@@ -797,8 +699,7 @@ Func _ValidateStrategyArray($aStrategy, $nbSides)
 	Local $iDimensions = UBound($aStrategy, 0)
 	If $iDimensions <> 2 Then
 		SetLog("CRITICAL: Strategy array has " & $iDimensions & " dimensions, need 2. Creating fallback.", $iColorError)
-		Local $iSafeSlots = 2
-		If IsDeclared("g_iSlotsGiants") Then $iSafeSlots = $g_iSlotsGiants
+		Local $iSafeSlots = IsDeclared("g_iSlotsGiants") ? $g_iSlotsGiants : 2
 		Return _CreateFallbackStrategy($nbSides, $iSafeSlots)
 	EndIf
 	
@@ -806,8 +707,7 @@ Func _ValidateStrategyArray($aStrategy, $nbSides)
 	Local $iRows = UBound($aStrategy, 1)
 	If $iRows = 0 Then
 		SetLog("CRITICAL: Strategy array has 0 rows. Creating fallback.", $iColorError)
-		Local $iSafeSlots = 2
-		If IsDeclared("g_iSlotsGiants") Then $iSafeSlots = $g_iSlotsGiants
+		Local $iSafeSlots = IsDeclared("g_iSlotsGiants") ? $g_iSlotsGiants : 2
 		Return _CreateFallbackStrategy($nbSides, $iSafeSlots)
 	EndIf
 	
@@ -815,8 +715,7 @@ Func _ValidateStrategyArray($aStrategy, $nbSides)
 	Local $iCols = UBound($aStrategy, 2)
 	If $iCols <> 5 Then
 		SetLog("CRITICAL: Strategy array has " & $iCols & " columns, need 5. Creating fallback.", $iColorError)
-		Local $iSafeSlots = 2
-		If IsDeclared("g_iSlotsGiants") Then $iSafeSlots = $g_iSlotsGiants
+		Local $iSafeSlots = IsDeclared("g_iSlotsGiants") ? $g_iSlotsGiants : 2
 		Return _CreateFallbackStrategy($nbSides, $iSafeSlots)
 	EndIf
 	
@@ -824,9 +723,7 @@ Func _ValidateStrategyArray($aStrategy, $nbSides)
 	For $i = 0 To $iRows - 1
 		; Column 0: Troop name/type (must be string or number)
 		If Not IsString($aStrategy[$i][0]) And Not IsNumber($aStrategy[$i][0]) Then
-			Local $eBarbDefault = 0
-			If IsDeclared("eBarb") Then $eBarbDefault = $eBarb
-			$aStrategy[$i][0] = $eBarbDefault
+			$aStrategy[$i][0] = IsDeclared("eBarb") ? $eBarb : 0
 		EndIf
 		
 		; Columns 1-4: Must be integers

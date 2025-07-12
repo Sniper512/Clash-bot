@@ -13,6 +13,19 @@
 ; Example .......: No
 ; ===============================================================================================================================
 Func GetAttackBar($bRemaining = False, $pMatchMode = $DB, $bDebug = False)
+	; Initialize color constants with safe fallbacks
+	Local $COLOR_ERROR = 0xFF0000
+	If IsDeclared("COLOR_ERROR") Then $COLOR_ERROR = $COLOR_ERROR
+	
+	Local $COLOR_SUCCESS = 0x00FF00
+	If IsDeclared("COLOR_SUCCESS") Then $COLOR_SUCCESS = $COLOR_SUCCESS
+	
+	Local $COLOR_INFO = 0x0000FF
+	If IsDeclared("COLOR_INFO") Then $COLOR_INFO = $COLOR_INFO
+	
+	Local $COLOR_DEBUG = 0xFF00FF
+	If IsDeclared("COLOR_DEBUG") Then $COLOR_DEBUG = $COLOR_DEBUG
+	
 	Local Static $aAttackBar[0][8]
 	Local Static $bDoubleRow = False, $bCheckSlot12 = False
 	Local $sSearchDiamond = GetDiamondFromRect2(0, 575 + $g_iBottomOffsetY, 858, 638 + $g_iBottomOffsetY)
@@ -222,6 +235,19 @@ Func GetAttackBar($bRemaining = False, $pMatchMode = $DB, $bDebug = False)
 EndFunc   ;==>GetAttackBar
 
 Func ExtendedAttackBarCheck($aAttackBarFirstSearch, $bRemaining, $sSearchDiamond)
+	; Initialize color constants with safe fallbacks
+	Local $COLOR_ERROR = 0xFF0000
+	If IsDeclared("COLOR_ERROR") Then $COLOR_ERROR = $COLOR_ERROR
+	
+	Local $COLOR_SUCCESS = 0x00FF00
+	If IsDeclared("COLOR_SUCCESS") Then $COLOR_SUCCESS = $COLOR_SUCCESS
+	
+	Local $COLOR_INFO = 0x0000FF
+	If IsDeclared("COLOR_INFO") Then $COLOR_INFO = $COLOR_INFO
+	
+	Local $COLOR_DEBUG = 0xFF00FF
+	If IsDeclared("COLOR_DEBUG") Then $COLOR_DEBUG = $COLOR_DEBUG
+	
 	;DebugAB($aAttackBarFirstSearch, "ExtendedAttackBarCheck")
 
 	Local Static $aAttackBar[0][8]

@@ -1,0 +1,7 @@
+{
+	"matchMode": 0,
+	"dropOrder": "LTH",
+	"nbSides": 4,
+	"availableTroops": "Giants,Barbarians,Archers",
+	"targetInfo": "Normal base"
+}
